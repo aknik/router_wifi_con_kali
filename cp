@@ -1,5 +1,5 @@
 #!/bin/sh
-CONEXION="./Plantillas/centralpub.conf"
+CONEXION="./Plantillas/central.conf"
 EX_IFACE="wlan0"
 IN_IFACE="eth0"
 INTRANET="192.168.2.0/24"
@@ -16,7 +16,7 @@ killall wpa_supplicant
 ifconfig $EX_IFACE down
 	
 	macchanger -r  $EX_IFACE
-        # 80:65:6D:14:92:A1
+        # 
 	iw reg set BO
 	iwconfig $EX_IFACE txpower 30
 	
