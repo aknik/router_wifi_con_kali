@@ -1,0 +1,28 @@
+#!/bin/bash
+
+for ip in `whois -h whois.radb.net '!gAS32934' | grep /`
+do
+  iptables -A FORWARD -p all -d $ip -j REJECT
+done
+
+##################################
+
+iptables -N FACEBOOK
+ 
+iptables -I FORWARD -m tcp -p tcp -m iprange --dst-range 66.220.144.0-66.220.159.255 --dport 443 -j FACEBOOK
+iptables -I FORWARD -m tcp -p tcp -m iprange --dst-range 69.63.176.0-69.63.191.255 --dport 443 -j FACEBOOK
+iptables -I FORWARD -m tcp -p tcp -m iprange --dst-range 204.15.20.0-204.15.23.255 --dport 443 -j FACEBOOK
+iptables -I FORWARD -m tcp -p tcp -m iprange --dst-range 66.220.144.0-66.220.159.255 --dport 80 -j FACEBOOK
+iptables -I FORWARD -m tcp -p tcp -m iprange --dst-range 69.63.176.0-69.63.191.255 --dport 80 -j FACEBOOK
+iptables -I FORWARD -m tcp -p tcp -m iprange --dst-range 204.15.20.0-204.15.23.255 --dport 80 -j FACEBOOK
+ 
+iptables -A FACEBOOK -j REJECT
+
+
+######################################
+
+
+iptables -I FORWARD -m string --algo bm --string "facebook.com" -j DROP
+
+
+

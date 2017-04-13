@@ -1,0 +1,52 @@
+#!/bin/sh
+CONEXION="./Plantillas/feryove.conf"
+EX_IFACE="wlan0"
+IN_IFACE="eth0"
+INTRANET="192.168.2.0/24"
+GATEWAYIP="192.168.1.1"
+ANYWHERE="any/0"
+
+killall wpa_supplicant
+ip link set dev $EX_IFACE down
+#airmon-ng check kill
+
+ifconfig $EX_IFACE down
+	# macchanger --mac 88:30:8A:35:F9:7D $EX_IFACE
+	macchanger --mac 28:BE:03:2A:86:F4 $EX_IFACE
+	# macchanger --mac 54:04:A6:94:A0:33 $EX_IFACE
+	# macchanger --mac 2C:0E:3D:0C:DD:16 $EX_IFACE
+        # macchanger --mac 18:4F:32:B3:A8:97 $EX_IFACE
+        # macchanger --mac A0:F8:95:F6:A0:F7 $EX_IFACE
+	iw reg set BO
+	iwconfig $EX_IFACE txpower 30
+ifconfig $EX_IFACE up
+iwconfig $EX_IFACE rate 54M
+ifconfig $EX_IFACE 192.168.1.32 netmask 255.255.255.0
+ifconfig $IN_IFACE 192.168.2.1 netmask 255.255.255.0
+. ~/cortafuegos
+# echo 1 > /proc/sys/net/ipv4/ip_forward 
+# /etc/sysctl.conf, asegurándonos de que exista una línea como: net.ipv4.ip_forward=1
+#MASQUERADE podría funcionar también si la dirección IP de eth0 fuese estática, pero recomienda utilizar SNAT.
+#iptables -t nat -A POSTROUTING -s 192.168.3.0/24 -o eth0 -j SNAT --to 80.58.1.14
+iptables -t nat -A POSTROUTING -o $EX_IFACE -j MASQUERADE
+route add default gw $GATEWAYIP $EX_IFACE
+# Con la linea anterior ya establecemos la ruta por defecto, pero en ocasiones me ha fallado ¿? 
+# Es redundante para establecer la ruta por defecto ...
+ip route replace default via $GATEWAYIP 
+
+iptables -t nat -A PREROUTING -i eth0 -p udp --dport 53 -j REDIRECT --to-ports 53
+
+#iptables -t nat -A PREROUTING -i eth0 -p udp --dport 53 -j DNAT --to 192.168.1.1:53
+#iptables -t nat -A OUTPUT -d 192.168.1.1 -p udp --dport 53 -j REDIRECT --to-ports 53
+
+
+wpa_supplicant -B -i $EX_IFACE -c $CONEXION
+
+service dnscrypt-proxy start
+service tor restart
+service dnsmasq restart
+
+sleep 1
+#ntpdate -v hora.roa.es 
+info
+

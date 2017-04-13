@@ -1,0 +1,18 @@
+# Borra iptables NAT
+
+iptables -t nat -F
+iptables -t nat -A POSTROUTING -o wlan0 -j MASQUERADE
+
+#iptables -t nat -A PREROUTING -s 149.154.164.0/22 -j DNAT --to 127.0.0.1
+
+# iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 465 -j REDIRECT --to-ports 9040
+# iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 587 -j REDIRECT --to-ports 9040
+# iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 993 -j REDIRECT --to-ports 9040
+# iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 143 -j REDIRECT --to-ports 9040
+
+
+# No parar tor si seguimos usando dnsmasq via tor
+
+# service tor restart
+# service dnsmasq restart
+

@@ -1,0 +1,78 @@
+#!/bin/sh
+#EX_IFACE="wlan0"
+#IN_FACE="eth0"
+#INTRANET="192.168.2.0/24"
+#GATEWAYIP="192.168.1.1"
+#ANYWHERE="any/0"
+
+BANNED_IPS="./banlist.txt"
+
+iptables -F
+iptables -X
+iptables -t nat -F
+iptables -t nat -X
+iptables -t mangle -F
+iptables -t mangle -X
+# Politicas por defecto
+iptables -P INPUT ACCEPT
+iptables -P OUTPUT ACCEPT
+iptables -P FORWARD ACCEPT
+# Bloquea entrada y forward de IP's
+for i in `cat $BANNED_IPS`; do
+
+        iptables -I INPUT -s $i -j DROP
+        iptables -I OUTPUT -s $i -j DROP
+        iptables -I FORWARD -s $i -j DROP
+done
+# Trafico ilimitado con la interface de bucle invertido
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A OUTPUT -o lo -j ACCEPT
+# Trafico ilimitado con el router
+iptables -A INPUT -i  $EX_IFACE -s $GATEWAYIP -j ACCEPT
+iptables -A OUTPUT -o $EX_IFACE -d $GATEWAYIP -j ACCEPT
+# Open NTP como cliente
+iptables -A OUTPUT -p udp --dport 123 -j ACCEPT
+iptables -A INPUT -p udp --sport 123 -j ACCEPT
+# Y como server
+iptables -A INPUT -p udp --dport 123 -j ACCEPT
+iptables -A OUTPUT -p udp --sport 123 -j ACCEPT
+# Abrimos puertos 1-1024 a nuestra intranet 
+iptables -A INPUT -i $IN_IFACE -s $INTRANET -j ACCEPT
+iptables -A INPUT -s $ANYWHERE -p tcp --match multiport --dports 0:1023 -j DROP
+iptables -A INPUT -s $ANYWHERE -p udp --match multiport --dports 0:1023 -j DROP
+# Reject spoofed packets # These adresses are mostly used for LAN's, so if these would come to a WAN-only server, drop them.
+iptables -A INPUT -i $EX_IFACE -s 10.0.0.0/8 -j DROP
+iptables -A INPUT -i $EX_IFACE -s 127.0.0.0/8 -j DROP
+iptables -A INPUT -i $EX_IFACE -s 172.16.0.0/12 -j DROP
+iptables -A INPUT -i $EX_IFACE -s 169.254.0.0/16 -j DROP
+iptables -A INPUT -i $EX_IFACE -s 192.168.0.0/16 -j DROP
+iptables -A FORWARD -i $EX_IFACE -s 192.168.0.0/16 -j DROP
+#Multicast-adresses.
+iptables -A INPUT -i $EX_IFACE -s 224.0.0.0/4 -j DROP
+iptables -A INPUT -i $EX_IFACE -d 224.0.0.0/4 -j DROP
+iptables -A INPUT -i $EX_IFACE -s 240.0.0.0/5 -j DROP
+iptables -A INPUT -i $EX_IFACE -d 240.0.0.0/5 -j DROP
+iptables -A INPUT -i $EX_IFACE -s 0.0.0.0/8 -j DROP
+iptables -A INPUT -i $EX_IFACE -d 0.0.0.0/8 -j DROP
+iptables -A INPUT -i $EX_IFACE -d 239.255.255.0/24 -j DROP
+iptables -A INPUT -i $EX_IFACE -d 255.255.255.255 -j DROP
+# Drop all invalid packets
+iptables -A INPUT -m state --state INVALID -j DROP
+iptables -A FORWARD -m state --state INVALID -j DROP
+iptables -A OUTPUT -m state --state INVALID -j DROP
+# Drop excessive RST packets to avoid smurf attacks
+iptables -A INPUT -p tcp -m tcp --tcp-flags RST RST -m limit --limit 2/second --limit-burst 2 -j ACCEPT
+# Don't allow pings through
+iptables -A INPUT -p icmp --icmp-type 8 -m state --state NEW,ESTABLISHED,RELATED -j REJECT
+iptables -A OUTPUT -p icmp --icmp-type 0 -m state --state ESTABLISHED,RELATED -j REJECT
+#iptables -A FORWARD -s 192.168.0.0/22 -i $WLAN -j DROP
+# Borra todas las reglas y establece politica denegar ARP
+arptables -F
+arptables -P INPUT DROP
+arptables -P OUTPUT DROP
+# Solo permite ARP en la intranet y al Router
+arptables -A INPUT -s $INTRANET -j ACCEPT
+arptables -A INPUT -s $GATEWAYIP -j ACCEPT
+arptables -A OUTPUT -d $INTRANET -j ACCEPT
+arptables -A OUTPUT -d $GATEWAYIP -j ACCEPT
+
