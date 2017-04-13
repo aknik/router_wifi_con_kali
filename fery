@@ -1,5 +1,5 @@
 #!/bin/sh
-CONEXION="./Plantillas/feryove.conf"
+CONEXION="./Plantillas/fertose.conf"
 EX_IFACE="wlan0"
 IN_IFACE="eth0"
 INTRANET="192.168.2.0/24"
@@ -11,12 +11,9 @@ ip link set dev $EX_IFACE down
 #airmon-ng check kill
 
 ifconfig $EX_IFACE down
-	# macchanger --mac 88:30:8A:35:F9:7D $EX_IFACE
-	macchanger --mac 28:BE:03:2A:86:F4 $EX_IFACE
-	# macchanger --mac 54:04:A6:94:A0:33 $EX_IFACE
-	# macchanger --mac 2C:0E:3D:0C:DD:16 $EX_IFACE
-        # macchanger --mac 18:4F:32:B3:A8:97 $EX_IFACE
-        # macchanger --mac A0:F8:95:F6:A0:F7 $EX_IFACE
+	
+	macchanger --mac 28:BE:03:xx:xx:xx $EX_IFACE
+	
 	iw reg set BO
 	iwconfig $EX_IFACE txpower 30
 ifconfig $EX_IFACE up
