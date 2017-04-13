@@ -1,8 +1,0 @@
-network={
-		ssid="MOVISTAR_B5E6"
-		psk="H3EUA3DkNPaCcEe4NMtM"
-                proto=WPA
-		key_mgmt=WPA-PSK
-                pairwise=CCMP TKIP
-                auth_alg=OPEN
-}
