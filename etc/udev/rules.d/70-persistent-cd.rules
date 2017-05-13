@@ -1,0 +1,7 @@
+# wlan0
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="64:70:02:29:aa:aa", ATTR{dev_id}=="0x0", ATTR{type}=="1",
+KERNEL=="wlan*", NAME="wlan0"
+
+# wlan1
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="70:f1:a1:94:aa:aa", ATTR{dev_id}=="0x0", ATTR{type}=="1",
+KERNEL=="wlan*", NAME="wlan1"
