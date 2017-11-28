@@ -1,30 +1,19 @@
-#service tor restart
-#service dnsmasq restart
+#!/bin/sh
+EX_IFACE="wlan0"
+IN_IFACE="enp4s0"
+INTRANET="192.168.2.0/24"
 
-# Borra iptables NAT
-
-iptables -t nat -F
-
-# Re activamos el masquerading, borrado al hacer iptables -t nat -F
-
-iptables -t nat -A POSTROUTING -o wlan0 -j MASQUERADE
-
-# Evita el puerto 22 no vaya al router por si usamos ssh 
-iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 22 -j REDIRECT --to-ports 22
-
-iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 3142 -j REDIRECT --to-ports 3142
-
-# Las consultas DNS se van todas a Tor por el  9050 
-# Si usamos dnsmasq no es necesario, ya que podemos usar dnstor desde dnsmasq
-iptables -t nat -A PREROUTING -i eth0 -p udp --dport 53 -j REDIRECT --to-ports 9053
+#nat dns requests to Tor
+iptables -t nat -A OUTPUT -d 127.0.0.1/32 -p udp -m udp --dport 53 -j REDIRECT --to-ports 53
+iptables -t nat -A PREROUTING -i $IN_IFACE -p udp --dport 53 -j REDIRECT --to-ports 53
 
 # Con ACCEPT evitamos que salga por TOR el trafico en los puertos elegidos
-# iptables -t nat -A PREROUTING -i eth0 -p tcp --syn -m multiport --dports 3142,81 -j ACCEPT
+# iptables -t nat -A PREROUTING -i $IN_IFACE -p tcp --syn -m multiport --dports 3142,81 -j ACCEPT
 
 # Todo el trafico restante tcp va por tor al 9040
-iptables -t nat -A PREROUTING -i eth0 -p tcp --syn -j REDIRECT --to-ports 9040
-
+iptables -t nat -A PREROUTING -i enp4s0 -p tcp --syn -j REDIRECT --to-ports 9040
 
 service tor restart
-service dnsmasq restart
+#service dnsmasq restart
 #service dnscrypt-proxy restart
+

@@ -1,0 +1,34 @@
+#!/bin/sh
+CONEXION="./Plantillas/feryove.conf"
+EX_IFACE="wlan0"
+IN_IFACE="enp4s0"
+INTRANET="192.168.2.0/24"
+GATEWAYIP="192.168.1.1"
+ANYWHERE="any/0"
+
+killall wpa_supplicant
+ip link set dev $EX_IFACE down
+#airmon-ng check kill
+ifconfig $EX_IFACE down
+        # macchanger -r  $EX_IFACE
+        macchanger -r  $EX_IFACE
+        macchanger -r  $IN_IFACE
+	iw reg set BO
+	iwconfig $EX_IFACE txpower 20
+ifconfig $EX_IFACE up
+iwconfig $EX_IFACE rate 54M
+ifconfig $EX_IFACE 192.168.1.202 netmask 255.255.255.0
+ifconfig $IN_IFACE 192.168.2.1 netmask 255.255.255.0
+
+. ~/cortafuegos
+
+wpa_supplicant -B -i $EX_IFACE -c $CONEXION
+
+service ntp restart
+# dnscrypt necesita haveged
+service haveged restart
+#ntpdate -v hora.roa.es
+#dnscrypt-proxy /etc/dnscrypt-proxy.conf
+tail temp
+curl http://ipinfo.io/$IP -s
+iwconfig wlan0

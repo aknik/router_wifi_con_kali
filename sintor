@@ -1,18 +1,14 @@
-# Borra iptables NAT
+#!/bin/sh
+EX_IFACE="wlan0"
+IN_IFACE="enp4s0"
+INTRANET="192.168.2.0/24"
 
-iptables -t nat -F
-iptables -t nat -A POSTROUTING -o wlan0 -j MASQUERADE
+service tor stop
 
-#iptables -t nat -A PREROUTING -s 149.154.164.0/22 -j DNAT --to 127.0.0.1
-
-# iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 465 -j REDIRECT --to-ports 9040
-# iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 587 -j REDIRECT --to-ports 9040
-# iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 993 -j REDIRECT --to-ports 9040
-# iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 143 -j REDIRECT --to-ports 9040
-
-
-# No parar tor si seguimos usando dnsmasq via tor
-
-# service tor restart
-# service dnsmasq restart
+# Borra unas tablas 
+iptables -t nat -D PREROUTING -i $IN_IFACE -p udp --dport 53 -j REDIRECT --to-ports 53
+iptables -t nat -D OUTPUT -d 127.0.0.1/32 -p udp -m udp --dport 53 -j REDIRECT --to-ports 53
+# Borra la tabla -D que envia todo el trafico por tor
+iptables -t nat -D PREROUTING -i $IN_IFACE -p tcp --syn -j REDIRECT --to-ports 9040
+#iptables -t nat -D PREROUTING -p tcp --syn -j REDIRECT --to-ports 9040
 
